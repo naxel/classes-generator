@@ -12,5 +12,8 @@
     "require": {
         "zendframework/zend-code": ">=2.2.2"
     },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "dev-master"
+    },
     "bin": ["classes-generator.php"]
 }
