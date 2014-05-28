@@ -1,0 +1,18 @@
+language: php
+
+php:
+  - 5.3
+  - 5.4
+  - 5.5
+#  - 5.6
+  - hhvm
+
+before_script:
+  # Composer
+  - wget -nc http://getcomposer.org/composer.phar
+  - php composer.phar install
+
+script:
+  # Code style
+  - php vendor/bin/phpcs ./src --standard=PSR1 --report=summary
+  - php vendor/bin/phpcs ./src --standard=PSR2 --report=summary

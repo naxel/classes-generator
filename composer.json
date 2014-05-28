@@ -1,0 +1,16 @@
+{
+    "name": "naxel/classes-generator",
+    "description": "Generate classes from json",
+    "minimum-stability": "dev",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alex Khaylo",
+            "email": "naxel@land.ru"
+        }
+    ],
+    "require": {
+        "zendframework/zend-code": ">=2.2.2"
+    },
+    "bin": ["classes-generator.php"]
+}
