@@ -1,6 +1,8 @@
 classes-generator
 =================
 
+[![Build Status](https://travis-ci.org/naxel/classes-generator.svg)](https://travis-ci.org/naxel/classes-generator)
+
 Generate classes from json
 
 Run from console:

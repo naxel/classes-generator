@@ -49,13 +49,13 @@ $params = array();
 if (isset($options['source'])) {
     $params['sourceDir'] = $options['source'];
 } else {
-    exit('Parameter "--source" is required');
+    exit("Parameter '--source' is required\n");
 }
 
 if (isset($options['destination'])) {
     $params['destinationDir'] = $options['destination'];
 } else {
-    exit('Parameter "--destination" is required');
+    exit("Parameter '--destination' is required\n");
 }
 
 if (isset($options['namespace'])) {
