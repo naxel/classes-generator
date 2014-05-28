@@ -14,5 +14,5 @@ before_script:
 
 script:
   # Code style
-  - php vendor/bin/phpcs ./src --standard=PSR1 --report=summary
-  - php vendor/bin/phpcs ./src --standard=PSR2 --report=summary
+  - php vendor/bin/phpcs Generator.php classes-generator.php --standard=PSR1 --report=summary
+  - php vendor/bin/phpcs Generator.php classes-generator.php --standard=PSR2 --report=summary
