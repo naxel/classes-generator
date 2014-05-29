@@ -85,7 +85,7 @@ class Generator
                     array(
                         'name' => '__construct',
                         'parameters' => array('data = array()'),
-                        'body' => '$this->setFromArray($data);',
+                        'body' => '$this->fromArray($data);',
                         'docblock' => DocBlockGenerator::fromArray(
                             array(
                                 'shortDescription' => 'Constructor',
@@ -99,7 +99,7 @@ class Generator
                 ),
                 MethodGenerator::fromArray(
                     array(
-                        'name' => 'setFromArray',
+                        'name' => 'fromArray',
                         'parameters' => array('data'),
                         'body' => '
 foreach ($data as $key => $val) {
@@ -132,6 +132,25 @@ return $this;
                                     new Tag\ReturnTag(
                                         array(
                                             'datatype' => '$this',
+                                        )
+                                    ),
+                                )
+                            )
+                        ),
+                    )
+                ),
+                MethodGenerator::fromArray(
+                    array(
+                        'name' => 'toArray',
+                        'body' => 'return json_decode(json_encode($this), true);',
+                        'docblock' => DocBlockGenerator::fromArray(
+                            array(
+                                'shortDescription' => 'Get array from object',
+                                'longDescription' => null,
+                                'tags' => array(
+                                    new Tag\ReturnTag(
+                                        array(
+                                            'datatype' => 'array',
                                         )
                                     ),
                                 )
