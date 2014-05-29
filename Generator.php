@@ -105,8 +105,8 @@ class Generator
 foreach ($data as $key => $val) {
 
     if (is_int($key)) {
-        if (method_exists($this, "addItem")) {
-            $this->addItem($val);
+        if (method_exists($this, "add")) {
+            $this->add($val);
         }
     }
 
@@ -141,13 +141,93 @@ return $this;
                 ),
                 MethodGenerator::fromArray(
                     array(
+                        'name' => 'fromJson',
+                        'parameters' => array('json'),
+                        'body' => '
+$this->fromArray(json_decode($json, true));
+return $this;
+                        ',
+                        'docblock' => DocBlockGenerator::fromArray(
+                            array(
+                                'shortDescription' => 'Set from json',
+                                'longDescription' => null,
+                                'tags' => array(
+                                    new Tag\ParamTag('json', 'string'),
+                                    new Tag\ReturnTag(
+                                        array(
+                                            'datatype' => '$this',
+                                        )
+                                    ),
+                                )
+                            )
+                        ),
+                    )
+                ),
+                MethodGenerator::fromArray(
+                    array(
                         'name' => 'toArray',
-                        'body' => 'return json_decode(json_encode($this), true);',
+                        'body' => 'return $this->toArrayRecursive($this);',
                         'docblock' => DocBlockGenerator::fromArray(
                             array(
                                 'shortDescription' => 'Get array from object',
                                 'longDescription' => null,
                                 'tags' => array(
+                                    new Tag\ReturnTag(
+                                        array(
+                                            'datatype' => 'array',
+                                        )
+                                    ),
+                                )
+                            )
+                        ),
+                    )
+                ),
+                MethodGenerator::fromArray(
+                    array(
+                        'name' => 'toJson',
+                        'body' => 'return json_encode($this->toArrayRecursive($this));',
+                        'docblock' => DocBlockGenerator::fromArray(
+                            array(
+                                'shortDescription' => 'Get array from object',
+                                'longDescription' => null,
+                                'tags' => array(
+                                    new Tag\ReturnTag(
+                                        array(
+                                            'datatype' => 'string',
+                                        )
+                                    ),
+                                )
+                            )
+                        ),
+                    )
+                ),
+                MethodGenerator::fromArray(
+                    array(
+                        'name' => 'toArrayRecursive',
+                        'parameters' => array('data'),
+                        'visibility' => MethodGenerator::VISIBILITY_PROTECTED,
+                        'body' => '
+if (is_array($data) || is_object($data)) {
+    $result = array();
+    foreach ($data as $key => $value) {
+        if ($key === "mappingClasses") {
+            continue;
+        }
+        if (is_object($value) && method_exists($value, "getAll")) {
+            $result[$key] = $this->toArrayRecursive($value->getAll());
+        } else {
+            $result[$key] = $this->toArrayRecursive($value);
+        }
+    }
+    return $result;
+}
+return $data;',
+                        'docblock' => DocBlockGenerator::fromArray(
+                            array(
+                                'shortDescription' => 'Get array from object',
+                                'longDescription' => null,
+                                'tags' => array(
+                                    new Tag\ParamTag('data', 'array|object'),
                                     new Tag\ReturnTag(
                                         array(
                                             'datatype' => 'array',
@@ -382,9 +462,17 @@ return $this;
             // Method passed as array
             MethodGenerator::fromArray(
                 array(
-                    'name' => 'addItem',
+                    'name' => 'add',
                     'parameters' => array($modelName),
-                    'body' => 'return $this->collection[] = new ' . ucfirst($modelName) . '($' . $modelName . ');',
+                    'body' => '
+if (is_array($' . $modelName . ')) {
+    $this->collection[] = new ' . ucfirst($modelName) . '($' . $modelName . ');
+} elseif (is_object($' . $modelName . ') && $' . $modelName . ' instanceof ' . $modelName . ') {
+    $this->collection[] = $' . $modelName . ';
+}
+
+return $this;
+',
                     'docblock' => DocBlockGenerator::fromArray(
                         array(
                             'shortDescription' => 'Add item',
