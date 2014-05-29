@@ -51,13 +51,14 @@ class Generator
     {
         $files = glob(realpath($this->sourceDir) . '/*.json');
         $classes = array();
-        foreach ($files as $file) {
-            $path = $this->generateClass($file);
-            $classes[$path] = $path;
-        }
 
         if ($this->rootClassName) {
             $path = $this->generateRootClass();
+            $classes[$path] = $path;
+        }
+
+        foreach ($files as $file) {
+            $path = $this->generateClass($file);
             $classes[$path] = $path;
         }
 
@@ -101,23 +102,26 @@ class Generator
                         'name' => 'setFromArray',
                         'parameters' => array('data'),
                         'body' => '
-        foreach ($data as $key => $val) {
+foreach ($data as $key => $val) {
 
-            if (is_int($key)) {
-                if (method_exists($this, "addItem")) {
-                    $this->addItem($val);
-                }
-            }
-
-            if (property_exists($this, $key)) {
-                if (isset($this->' . $this->mappingClassesPropertyName . '[$key])) {
-                    $this->{$key} = new $this->' . $this->mappingClassesPropertyName . '[$key]($val);
-                } else {
-                    $this->{$key} = $val;
-                }
-            }
+    if (is_int($key)) {
+        if (method_exists($this, "addItem")) {
+            $this->addItem($val);
         }
-        return $this;
+    }
+
+    if (property_exists($this, $key)) {
+        if (isset($this->' . $this->mappingClassesPropertyName . '[$key])) {
+            $this->{$key} = new $this->' . $this->mappingClassesPropertyName . '[$key]($val);
+            if (method_exists($this->{$key}, "getAll")) {
+                $this->{$key} = $this->{$key}->getAll();
+            }
+        } else {
+            $this->{$key} = $val;
+        }
+    }
+}
+return $this;
                         ',
                         'docblock' => DocBlockGenerator::fromArray(
                             array(
@@ -155,6 +159,11 @@ class Generator
     }
 
 
+    /**
+     * @param string $property
+     * @param string $type
+     * @return array
+     */
     protected function generateGetMethod($property, $type)
     {
         return array(
@@ -176,6 +185,11 @@ class Generator
         );
     }
 
+    /**
+     * @param string $property
+     * @param string $type
+     * @return array
+     */
     protected function generateSetMethod($property, $type)
     {
         return array(
@@ -339,6 +353,10 @@ class Generator
         return $path;
     }
 
+    /**
+     * @param string $modelName
+     * @return array
+     */
     protected function getMethodsForCollection($modelName)
     {
         return array(
