@@ -77,6 +77,7 @@ class Generator
     public function generateRootClass()
     {
         $class = new ClassGenerator();
+        $class->setAbstract(true);
         $class->setName($this->rootClassName);
         $class->setNamespaceName($this->namespace);
         $class->addMethods(
