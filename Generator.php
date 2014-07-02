@@ -217,7 +217,9 @@ if (is_array($data) || is_object($data)) {
         if (is_object($value) && method_exists($value, "getAll")) {
             $result[$key] = $this->toArrayRecursive($value->getAll());
         } else {
-            $result[$key] = $this->toArrayRecursive($value);
+            if ($value !== null) {
+                $result[$key] = $this->toArrayRecursive($value);
+            }
         }
     }
     return $result;
