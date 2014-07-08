@@ -470,7 +470,8 @@ return $data;',
                     'body' => '
 if (is_array($' . lcfirst($modelName) . ')) {
     $this->collection[] = new ' . ucfirst($modelName) . '($' . lcfirst($modelName) . ');
-} elseif (is_object($' . lcfirst($modelName) . ') && $' . lcfirst($modelName) . ' instanceof ' . ucfirst($modelName) . ') {
+} elseif (is_object($' . lcfirst($modelName) . ') && $' . lcfirst($modelName) . ' instanceof ' . ucfirst($modelName)
+        . ') {
     $this->collection[] = $' . lcfirst($modelName) . ';
 }
 
