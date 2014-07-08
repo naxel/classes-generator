@@ -347,7 +347,7 @@ return $data;',
                 continue;
             } elseif ($value === 'number' || $value === 'int' || $value === 'integer') {
                 //Create property type number
-                $class->addProperty($property);
+                $class->addProperty($property, null, PropertyGenerator::FLAG_PROTECTED);
                 $class->addMethods(
                     array(
                         MethodGenerator::fromArray($this->generateGetMethod($property, 'int')),
@@ -356,7 +356,7 @@ return $data;',
                 );
             } elseif ($value === 'float' || $value === 'double' || $value === 'real') {
                 //Create property type number
-                $class->addProperty($property);
+                $class->addProperty($property, null, PropertyGenerator::FLAG_PROTECTED);
                 $class->addMethods(
                     array(
                         MethodGenerator::fromArray($this->generateGetMethod($property, $value)),
@@ -365,7 +365,7 @@ return $data;',
                 );
             } elseif ($value === 'string') {
                 //Create property type string
-                $class->addProperty($property);
+                $class->addProperty($property, null, PropertyGenerator::FLAG_PROTECTED);
                 $class->addMethods(
                     array(
                         MethodGenerator::fromArray($this->generateGetMethod($property, $value)),
@@ -374,7 +374,7 @@ return $data;',
                 );
             } elseif ($value === 'date') {
                 //Create property type date
-                $class->addProperty($property);
+                $class->addProperty($property, null, PropertyGenerator::FLAG_PROTECTED);
                 $class->addMethods(
                     array(
                         MethodGenerator::fromArray($this->generateGetMethod($property, 'string')),
@@ -383,7 +383,7 @@ return $data;',
                 );
             } elseif ($value === 'array') {
                 //Create property type date
-                $class->addProperty($property);
+                $class->addProperty($property, null, PropertyGenerator::FLAG_PROTECTED);
                 $class->addMethods(
                     array(
                         MethodGenerator::fromArray($this->generateGetMethod($property, 'array')),
@@ -392,7 +392,7 @@ return $data;',
                 );
             } elseif ($value === 'boolean' || $value === 'bool') {
                 //Create property type boolean
-                $class->addProperty($property);
+                $class->addProperty($property, null, PropertyGenerator::FLAG_PROTECTED);
                 $class->addMethods(
                     array(
                         MethodGenerator::fromArray($this->generateGetMethod($property, $value)),
@@ -406,7 +406,7 @@ return $data;',
                 }
 
             } elseif ($property === "@collection") {
-                $class->addProperty('collection');
+                $class->addProperty('collection', null, PropertyGenerator::FLAG_PROTECTED);
                 $class->addMethods($this->getMethodsForCollection($value->model));
             } elseif ($property === "@parent") {
                 //"@parent": "\\Classes\\Items",
@@ -425,7 +425,7 @@ return $data;',
                 }
 
                 //Create property type Class
-                $class->addProperty($property);
+                $class->addProperty($property, null, PropertyGenerator::FLAG_PROTECTED);
                 $class->addMethods(
                     array(
                         // Method passed as array
