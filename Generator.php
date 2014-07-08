@@ -270,7 +270,7 @@ return $data;',
     {
         return array(
             'name' => 'get' . ucfirst($property),
-            'body' => 'return $this->' . $property . ';',
+            'body' => 'return $this->' . lcfirst($property) . ';',
             'docblock' => DocBlockGenerator::fromArray(
                 array(
                     'shortDescription' => 'Retrieve the ' . $property . ' property',
@@ -296,8 +296,8 @@ return $data;',
     {
         return array(
             'name' => 'set' . ucfirst($property),
-            'parameters' => array($property),
-            'body' => '$this->' . $property . ' = $' . $property . ';' . "\n"
+            'parameters' => array(lcfirst($property)),
+            'body' => '$this->' . lcfirst($property) . ' = $' . lcfirst($property) . ';' . "\n"
                 . 'return $this;',
             'docblock' => DocBlockGenerator::fromArray(
                 array(
@@ -449,7 +449,7 @@ return $data;',
 
         $code = $file->generate();
 
-        $path = realpath($this->destinationDir) . '/' . $className . '.php';
+        $path = realpath($this->destinationDir) . '/' . ucfirst($className) . '.php';
         $code = str_replace("\n\n}\n", '}', $code);
         file_put_contents($path, $code);
         return $path;
@@ -466,12 +466,12 @@ return $data;',
             MethodGenerator::fromArray(
                 array(
                     'name' => 'add',
-                    'parameters' => array($modelName),
+                    'parameters' => array(lcfirst($modelName)),
                     'body' => '
-if (is_array($' . $modelName . ')) {
-    $this->collection[] = new ' . ucfirst($modelName) . '($' . $modelName . ');
-} elseif (is_object($' . $modelName . ') && $' . $modelName . ' instanceof ' . $modelName . ') {
-    $this->collection[] = $' . $modelName . ';
+if (is_array($' . lcfirst($modelName) . ')) {
+    $this->collection[] = new ' . ucfirst($modelName) . '($' . lcfirst($modelName) . ');
+} elseif (is_object($' . lcfirst($modelName) . ') && $' . lcfirst($modelName) . ' instanceof ' . ucfirst($modelName) . ') {
+    $this->collection[] = $' . lcfirst($modelName) . ';
 }
 
 return $this;
@@ -496,7 +496,7 @@ return $this;
                     'body' => 'return $this->collection;',
                     'docblock' => DocBlockGenerator::fromArray(
                         array(
-                            'shortDescription' => 'Add item',
+                            'shortDescription' => 'Get items',
                             'longDescription' => null,
                             new Tag\ParamTag($modelName, ucfirst($modelName)),
                             new Tag\ReturnTag(
