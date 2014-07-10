@@ -22,6 +22,8 @@ class Generator
 
     public $mappingClassesPropertyName = 'mappingClasses';
 
+    public $responseStylePropertyName = 'responseStyle';
+
     /**
      * @param array $params
      */
@@ -100,6 +102,32 @@ class Generator
                 ),
                 MethodGenerator::fromArray(
                     array(
+                        'name' => '_toUnderScoreFormat',
+                        'parameters' => array('word'),
+                        'body' => 'return strtolower(preg_replace( \'/([A-Z])/\', \'_$1\', $word));',
+                        'docblock' => DocBlockGenerator::fromArray(
+                                array(
+                                    'shortDescription' => 'Convert word to under score format',
+                                    'longDescription' => null
+                                )
+                            ),
+                    )
+                ),
+                MethodGenerator::fromArray(
+                    array(
+                        'name' => '_toUpperCaseFormat',
+                        'parameters' => array('word'),
+                        'body' => 'return lcfirst(str_replace(\'_\', \'\', mb_convert_case($word, MB_CASE_TITLE)));',
+                        'docblock' => DocBlockGenerator::fromArray(
+                                array(
+                                    'shortDescription' => 'Convert word to upper case format',
+                                    'longDescription' => null
+                                )
+                            ),
+                    )
+                ),
+                MethodGenerator::fromArray(
+                    array(
                         'name' => 'fromArray',
                         'parameters' => array('data'),
                         'body' => '
@@ -111,6 +139,11 @@ foreach ($data as $key => $val) {
         }
     }
 
+    checkProperty:
+    if ($this->responseStyle == self::UNDER_SCORE_STYLE) {
+        $key = $this->_toUpperCaseFormat($key);
+    }
+
     if (property_exists($this, $key)) {
         if (isset($this->' . $this->mappingClassesPropertyName . '[$key])) {
             $this->{$key} = new $this->' . $this->mappingClassesPropertyName . '[$key]($val);
@@ -120,6 +153,9 @@ foreach ($data as $key => $val) {
         } else {
             $this->{$key} = $val;
         }
+    } elseif (property_exists($this, $this->_toUpperCaseFormat($key))) {
+        $this->responseStyle = self::UNDER_SCORE_STYLE;
+        goto checkProperty;
     }
 }
 return $this;
@@ -214,6 +250,11 @@ if (is_array($data) || is_object($data)) {
         if ($key === "mappingClasses") {
             continue;
         }
+
+        if ($this->responseStyle == self::UNDER_SCORE_STYLE) {
+            $key = $this->_toUnderScoreFormat($key);
+        }
+
         if (is_object($value) && method_exists($value, "getAll")) {
             $result[$key] = $this->toArrayRecursive($value->getAll());
         } else {
@@ -244,7 +285,26 @@ return $data;',
             )
         );
 
+        $propertyGenerator = new PropertyGenerator();
+        $properties = $propertyGenerator->fromArray(
+            array(
+                'name' => 'CAMEL_CASE_STYLE',
+                'const' => 'CAMEL_CASE_STYLE',
+                'defaultvalue' => 'camelCase'
+            )
+        );
+        $class->addPropertyFromGenerator($properties);
+        $properties = $propertyGenerator->fromArray(
+            array(
+                'name' => 'UNDER_SCORE_STYLE',
+                'const' => 'UNDER_SCORE_STYLE',
+                'defaultvalue' => 'underScore'
+            )
+        );
+        $class->addPropertyFromGenerator($properties);
+
         $class->addProperty($this->mappingClassesPropertyName, array(), PropertyGenerator::FLAG_PROTECTED);
+        $class->addProperty($this->responseStylePropertyName, null, PropertyGenerator::FLAG_PROTECTED);
 
         $file = new FileGenerator(
             array(
