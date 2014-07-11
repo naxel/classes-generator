@@ -22,7 +22,7 @@ class Generator
 
     public $mappingClassesPropertyName = 'mappingClasses';
 
-    public $responseStylePropertyName = 'responseStyle';
+    public $mappingPropertyName = 'propNameMap';
 
     /**
      * @param array $params
@@ -102,32 +102,6 @@ class Generator
                 ),
                 MethodGenerator::fromArray(
                     array(
-                        'name' => '_toUnderScoreFormat',
-                        'parameters' => array('word'),
-                        'body' => 'return strtolower(preg_replace( \'/([A-Z])/\', \'_$1\', $word));',
-                        'docblock' => DocBlockGenerator::fromArray(
-                                array(
-                                    'shortDescription' => 'Convert word to under score format',
-                                    'longDescription' => null
-                                )
-                            ),
-                    )
-                ),
-                MethodGenerator::fromArray(
-                    array(
-                        'name' => '_toUpperCaseFormat',
-                        'parameters' => array('word'),
-                        'body' => 'return lcfirst(str_replace(\'_\', \'\', mb_convert_case($word, MB_CASE_TITLE)));',
-                        'docblock' => DocBlockGenerator::fromArray(
-                                array(
-                                    'shortDescription' => 'Convert word to upper case format',
-                                    'longDescription' => null
-                                )
-                            ),
-                    )
-                ),
-                MethodGenerator::fromArray(
-                    array(
                         'name' => 'fromArray',
                         'parameters' => array('data'),
                         'body' => '
@@ -139,23 +113,28 @@ foreach ($data as $key => $val) {
         }
     }
 
-    checkProperty:
-    if ($this->responseStyle == self::UNDER_SCORE_STYLE) {
-        $key = $this->_toUpperCaseFormat($key);
+    $propertyName = $key;
+    $ourPropertyName = array_search($propertyName, $this->propNameMap);
+
+    if ($ourPropertyName) {
+        $propertyName = $ourPropertyName;
     }
 
-    if (property_exists($this, $key)) {
-        if (isset($this->' . $this->mappingClassesPropertyName . '[$key])) {
-            $this->{$key} = new $this->' . $this->mappingClassesPropertyName . '[$key]($val);
-            if (method_exists($this->{$key}, "getAll")) {
-                $this->{$key} = $this->{$key}->getAll();
+    if (!empty($this->' . $this->mappingPropertyName . ')) {
+        if (array_key_exists($key, $this->' . $this->mappingPropertyName . ')) {
+            $propertyName = $this->' . $this->mappingPropertyName . '[$key];
+        }
+    }
+
+    if (property_exists($this, $propertyName)) {
+        if (isset($this->' . $this->mappingClassesPropertyName . '[$propertyName])) {
+            $this->{$propertyName} = new $this->' . $this->mappingClassesPropertyName . '[$propertyName]($val);
+            if (method_exists($this->{$propertyName}, "getAll")) {
+                $this->{$propertyName} = $this->{$propertyName}->getAll();
             }
         } else {
-            $this->{$key} = $val;
+            $this->{$propertyName} = $val;
         }
-    } elseif (property_exists($this, $this->_toUpperCaseFormat($key))) {
-        $this->responseStyle = self::UNDER_SCORE_STYLE;
-        goto checkProperty;
     }
 }
 return $this;
@@ -251,15 +230,19 @@ if (is_array($data) || is_object($data)) {
             continue;
         }
 
-        if ($this->responseStyle == self::UNDER_SCORE_STYLE) {
-            $key = $this->_toUnderScoreFormat($key);
+        $propNameMap = $key;
+
+        if (!empty($this->' . $this->mappingPropertyName . ')
+            && array_key_exists($key, $this->' . $this->mappingPropertyName . ')
+        ) {
+            $propNameMap = array_search($key, $this->' . $this->mappingPropertyName . ');
         }
 
         if (is_object($value) && method_exists($value, "getAll")) {
-            $result[$key] = $this->toArrayRecursive($value->getAll());
+            $result[$propNameMap] = $this->toArrayRecursive($value->getAll());
         } else {
             if ($value !== null) {
-                $result[$key] = $this->toArrayRecursive($value);
+                $result[$propNameMap] = $this->toArrayRecursive($value);
             }
         }
     }
@@ -285,26 +268,8 @@ return $data;',
             )
         );
 
-        $propertyGenerator = new PropertyGenerator();
-        $properties = $propertyGenerator->fromArray(
-            array(
-                'name' => 'CAMEL_CASE_STYLE',
-                'const' => 'CAMEL_CASE_STYLE',
-                'defaultvalue' => 'camelCase'
-            )
-        );
-        $class->addPropertyFromGenerator($properties);
-        $properties = $propertyGenerator->fromArray(
-            array(
-                'name' => 'UNDER_SCORE_STYLE',
-                'const' => 'UNDER_SCORE_STYLE',
-                'defaultvalue' => 'underScore'
-            )
-        );
-        $class->addPropertyFromGenerator($properties);
-
         $class->addProperty($this->mappingClassesPropertyName, array(), PropertyGenerator::FLAG_PROTECTED);
-        $class->addProperty($this->responseStylePropertyName, null, PropertyGenerator::FLAG_PROTECTED);
+        $class->addProperty($this->mappingPropertyName, array(), PropertyGenerator::FLAG_PROTECTED);
 
         $file = new FileGenerator(
             array(
@@ -392,8 +357,12 @@ return $data;',
 
         $className = null;
         $mappingClasses = array();
+        $propNameMap = $this->setPropNameMap($sourceContent);
         foreach ($sourceContent as $property => $value) {
-
+            $ourPropertyName = array_search($property, $propNameMap);
+            if ($ourPropertyName) {
+                $property = $ourPropertyName;
+            }
             if ($property === '@name') {
                 //Class name
                 $className = $value;
@@ -500,6 +469,7 @@ return $data;',
         }
 
         $class->addProperty($this->mappingClassesPropertyName, $mappingClasses, PropertyGenerator::FLAG_PROTECTED);
+        $class->addProperty($this->mappingPropertyName, $propNameMap, PropertyGenerator::FLAG_PROTECTED);
 
         $file = new FileGenerator(
             array(
@@ -570,5 +540,50 @@ return $this;
                 )
             )
         );
+    }
+
+    /**
+     * Check property to under score style
+     *
+     * @param $param
+     * @return bool
+     */
+    private function isUnderScoreProperty($param)
+    {
+        return (bool)strpos($param, "_");
+    }
+
+    /**
+     * Convert word to upper case format
+     *
+     * @param $word
+     * @return string
+     */
+    private function toUpperCaseFormat($word)
+    {
+        return lcfirst(str_replace("_", "", mb_convert_case($word, MB_CASE_TITLE)));
+    }
+
+    /**
+     * Set property name map
+     *
+     * Needed for under score property name
+     *
+     * @param array $data
+     * @return array
+     */
+    private function setPropNameMap($data)
+    {
+        $propertyNameMap = array();
+
+        foreach ($data as $property => $val) {
+            $mapValue = $property;
+            if ($this->isUnderScoreProperty($property) == true) {
+                $property = $this->toUpperCaseFormat($property);
+                $propertyNameMap[$property] = $mapValue;
+            }
+        }
+
+        return $propertyNameMap;
     }
 }
