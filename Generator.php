@@ -226,7 +226,7 @@ return $this;
 if (is_array($data) || is_object($data)) {
     $result = array();
     foreach ($data as $key => $value) {
-        if ($key === "mappingClasses") {
+        if ($key === "' . $this->mappingClassesPropertyName . '" || $key === "' . $this->mappingPropertyName . '") {
             continue;
         }
 
