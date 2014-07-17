@@ -235,7 +235,7 @@ if (is_array($data) || is_object($data)) {
         if (!empty($this->' . $this->mappingPropertyName . ')
             && array_key_exists($key, $this->' . $this->mappingPropertyName . ')
         ) {
-            $propNameMap = array_search($key, $this->' . $this->mappingPropertyName . ');
+            $propNameMap = $this->' . $this->mappingPropertyName . '[$key];
         }
 
         if (is_object($value) && method_exists($value, "getAll")) {
