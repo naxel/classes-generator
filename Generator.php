@@ -435,7 +435,7 @@ return $data;',
                 }
 
             } elseif ($property === "@collection") {
-                $class->addProperty('collection', null, PropertyGenerator::FLAG_PROTECTED);
+                $class->addProperty('collection', array(), PropertyGenerator::FLAG_PROTECTED);
                 $class->addMethods($this->getMethodsForCollection($value->model));
             } elseif ($property === "@parent") {
                 //"@parent": "\\Classes\\Items",
