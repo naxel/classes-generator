@@ -548,9 +548,9 @@ return $this;
      * @param $param
      * @return bool
      */
-    private function isUnderScoreProperty($param)
+    private function isDashExist($param)
     {
-        return (bool)strpos($param, "_");
+        return (bool)strpos($param, "_") || (bool)strpos($param, "-");
     }
 
     /**
@@ -561,7 +561,14 @@ return $this;
      */
     private function toUpperCaseFormat($word)
     {
-        return lcfirst(str_replace("_", "", mb_convert_case($word, MB_CASE_TITLE)));
+        $wordInUpperCase = $word;
+        $wordInUpperCase = str_replace("_", "", mb_convert_case($wordInUpperCase, MB_CASE_TITLE));
+
+        if (strpos($wordInUpperCase, "-")) {
+            $wordInUpperCase = str_replace("-", "", mb_convert_case($wordInUpperCase, MB_CASE_TITLE));
+        }
+
+        return lcfirst($wordInUpperCase);
     }
 
     /**
@@ -578,7 +585,7 @@ return $this;
 
         foreach ($data as $property => $val) {
             $mapValue = $property;
-            if ($this->isUnderScoreProperty($property) == true) {
+            if ($this->isDashExist($property) == true) {
                 $property = $this->toUpperCaseFormat($property);
                 $propertyNameMap[$property] = $mapValue;
             }
