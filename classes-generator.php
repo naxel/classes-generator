@@ -41,6 +41,9 @@ $options = getopt($shortOpts, $longOpts);
      'destinationDir' => 'classes',
      'namespace' => 'Classes',
      'rootClassName' => 'SuperClass',
+     'rootClassNameForCollection' => 'CollectionSuperClass',
+     'rootClassNamespace' => 'SuperClass',
+     'rootClassForCollectionNamespace' => 'CollectionSuperClass'
      'showRequires' => true,
  );
  */
@@ -64,6 +67,15 @@ if (isset($options['namespace'])) {
 
 if (isset($options['rootClass'])) {
     $params['rootClassName'] = $options['rootClass'];
+}
+if (isset($options['rootClassNameForCollection'])) {
+    $params['rootClassNameForCollection'] = $options['rootClassNameForCollection'];
+}
+if (isset($options['rootClassNamespace'])) {
+    $params['rootClassNamespace'] = $options['rootClassNamespace'];
+}
+if (isset($options['rootClassForCollectionNamespace'])) {
+    $params['rootClassForCollectionNamespace'] = $options['rootClassForCollectionNamespace'];
 }
 if (isset($options['showRequires']) || isset($options['r'])) {
     $params['showRequires'] = true;

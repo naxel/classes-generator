@@ -24,6 +24,12 @@ class Generator
 
     public $mappingPropertyName = 'propNameMap';
 
+    public $rootClassNameForCollection = null;
+
+    public $rootClassNamespace = null;
+
+    public $rootClassForCollectionNamespace = null;
+
     /**
      * @param array $params
      */
@@ -41,6 +47,15 @@ class Generator
         if (isset($params['rootClassName']) && $params['rootClassName']) {
             $this->rootClassName = $params['rootClassName'];
         }
+        if (isset($params['rootClassNameForCollection']) && $params['rootClassNameForCollection']) {
+            $this->rootClassNameForCollection = $params['rootClassNameForCollection'];
+        }
+        if (isset($params['rootClassNamespace']) && $params['rootClassNamespace']) {
+            $this->rootClassNamespace = $params['rootClassNamespace'];
+        }
+        if (isset($params['rootClassForCollectionNamespace']) && $params['rootClassForCollectionNamespace']) {
+            $this->rootClassForCollectionNamespace = $params['rootClassForCollectionNamespace'];
+        }
         if (isset($params['showRequires']) && $params['showRequires']) {
             $this->showRequires = $params['showRequires'];
         }
@@ -54,11 +69,6 @@ class Generator
         $files = glob(realpath($this->sourceDir) . '/*.json');
         $classes = array();
 
-        if ($this->rootClassName) {
-            $path = $this->generateRootClass();
-            $classes[$path] = $path;
-        }
-
         foreach ($files as $file) {
             $path = $this->generateClass($file);
             $classes[$path] = $path;
@@ -71,218 +81,6 @@ class Generator
                 echo $classPath . "\n";
             }
         }
-    }
-
-    /**
-     * @return string
-     */
-    public function generateRootClass()
-    {
-        $class = new ClassGenerator();
-        $class->setAbstract(true);
-        $class->setName($this->rootClassName);
-        $class->setNamespaceName($this->namespace);
-        $class->addMethods(
-            array(
-                MethodGenerator::fromArray(
-                    array(
-                        'name' => '__construct',
-                        'parameters' => array('data = array()'),
-                        'body' => '$this->fromArray($data);',
-                        'docblock' => DocBlockGenerator::fromArray(
-                            array(
-                                'shortDescription' => 'Constructor',
-                                'longDescription' => null,
-                                'tags' => array(
-                                    new Tag\ParamTag('data', 'array'),
-                                )
-                            )
-                        ),
-                    )
-                ),
-                MethodGenerator::fromArray(
-                    array(
-                        'name' => 'fromArray',
-                        'parameters' => array('data'),
-                        'body' => '
-foreach ($data as $key => $val) {
-
-    if (is_int($key)) {
-        if (method_exists($this, "add")) {
-            $this->add($val);
-        }
-    }
-
-    $propertyName = $key;
-    $ourPropertyName = array_search($propertyName, $this->propNameMap);
-
-    if ($ourPropertyName) {
-        $propertyName = $ourPropertyName;
-    }
-
-    if (!empty($this->' . $this->mappingPropertyName . ')) {
-        if (array_key_exists($key, $this->' . $this->mappingPropertyName . ')) {
-            $propertyName = $this->' . $this->mappingPropertyName . '[$key];
-        }
-    }
-
-    if (property_exists($this, $propertyName)) {
-        if (isset($this->' . $this->mappingClassesPropertyName . '[$propertyName])) {
-            $this->{$propertyName} = new $this->' . $this->mappingClassesPropertyName . '[$propertyName]($val);
-            if (method_exists($this->{$propertyName}, "getAll")) {
-                $this->{$propertyName} = $this->{$propertyName}->getAll();
-            }
-        } else {
-            $this->{$propertyName} = $val;
-        }
-    }
-}
-return $this;
-                        ',
-                        'docblock' => DocBlockGenerator::fromArray(
-                            array(
-                                'shortDescription' => 'Set from array',
-                                'longDescription' => null,
-                                'tags' => array(
-                                    new Tag\ParamTag('data', 'array'),
-                                    new Tag\ReturnTag(
-                                        array(
-                                            'datatype' => '$this',
-                                        )
-                                    ),
-                                )
-                            )
-                        ),
-                    )
-                ),
-                MethodGenerator::fromArray(
-                    array(
-                        'name' => 'fromJson',
-                        'parameters' => array('json'),
-                        'body' => '
-$this->fromArray(json_decode($json, true));
-return $this;
-                        ',
-                        'docblock' => DocBlockGenerator::fromArray(
-                            array(
-                                'shortDescription' => 'Set from json',
-                                'longDescription' => null,
-                                'tags' => array(
-                                    new Tag\ParamTag('json', 'string'),
-                                    new Tag\ReturnTag(
-                                        array(
-                                            'datatype' => '$this',
-                                        )
-                                    ),
-                                )
-                            )
-                        ),
-                    )
-                ),
-                MethodGenerator::fromArray(
-                    array(
-                        'name' => 'toArray',
-                        'body' => 'return $this->toArrayRecursive($this);',
-                        'docblock' => DocBlockGenerator::fromArray(
-                            array(
-                                'shortDescription' => 'Get array from object',
-                                'longDescription' => null,
-                                'tags' => array(
-                                    new Tag\ReturnTag(
-                                        array(
-                                            'datatype' => 'array',
-                                        )
-                                    ),
-                                )
-                            )
-                        ),
-                    )
-                ),
-                MethodGenerator::fromArray(
-                    array(
-                        'name' => 'toJson',
-                        'body' => 'return json_encode($this->toArrayRecursive($this));',
-                        'docblock' => DocBlockGenerator::fromArray(
-                            array(
-                                'shortDescription' => 'Get array from object',
-                                'longDescription' => null,
-                                'tags' => array(
-                                    new Tag\ReturnTag(
-                                        array(
-                                            'datatype' => 'string',
-                                        )
-                                    ),
-                                )
-                            )
-                        ),
-                    )
-                ),
-                MethodGenerator::fromArray(
-                    array(
-                        'name' => 'toArrayRecursive',
-                        'parameters' => array('data'),
-                        'visibility' => MethodGenerator::VISIBILITY_PROTECTED,
-                        'body' => '
-if (is_array($data) || is_object($data)) {
-    $result = array();
-    foreach ($data as $key => $value) {
-        if ($key === "' . $this->mappingClassesPropertyName . '" || $key === "' . $this->mappingPropertyName . '") {
-            continue;
-        }
-
-        $propNameMap = $key;
-
-        if (!empty($this->' . $this->mappingPropertyName . ')
-            && array_key_exists($key, $this->' . $this->mappingPropertyName . ')
-        ) {
-            $propNameMap = $this->' . $this->mappingPropertyName . '[$key];
-        }
-
-        if (is_object($value) && method_exists($value, "getAll")) {
-            $result[$propNameMap] = $this->toArrayRecursive($value->getAll());
-        } else {
-            if ($value !== null) {
-                $result[$propNameMap] = $this->toArrayRecursive($value);
-            }
-        }
-    }
-    return $result;
-}
-return $data;',
-                        'docblock' => DocBlockGenerator::fromArray(
-                            array(
-                                'shortDescription' => 'Get array from object',
-                                'longDescription' => null,
-                                'tags' => array(
-                                    new Tag\ParamTag('data', 'array|object'),
-                                    new Tag\ReturnTag(
-                                        array(
-                                            'datatype' => 'array',
-                                        )
-                                    ),
-                                )
-                            )
-                        ),
-                    )
-                ),
-            )
-        );
-
-        $class->addProperty($this->mappingClassesPropertyName, array(), PropertyGenerator::FLAG_PROTECTED);
-        $class->addProperty($this->mappingPropertyName, array(), PropertyGenerator::FLAG_PROTECTED);
-
-        $file = new FileGenerator(
-            array(
-                'classes' => array($class),
-            )
-        );
-
-        $code = $file->generate();
-
-        $path = realpath($this->destinationDir) . '/' . $this->rootClassName . '.php';
-        $code = str_replace("\n\n}\n", '}', $code); //PSR-2 ending of class
-        file_put_contents($path, $code);
-        return $path;
     }
 
 
@@ -351,13 +149,11 @@ return $data;',
         $sourceContent = json_decode(file_get_contents($sourceFile));
         $class = new ClassGenerator();
 
-        if ($this->rootClassName) {
-            $class->setExtendedClass($this->rootClassName);
-        }
-
         $className = null;
         $mappingClasses = array();
         $propNameMap = $this->setPropNameMap($sourceContent);
+        $isCollection = false;
+
         foreach ($sourceContent as $property => $value) {
             $ourPropertyName = array_search($property, $propNameMap);
             if ($ourPropertyName) {
@@ -435,6 +231,7 @@ return $data;',
                 }
 
             } elseif ($property === "@collection") {
+                $isCollection = true;
                 $class->addProperty('collection', array(), PropertyGenerator::FLAG_PROTECTED);
                 $class->addMethods($this->getMethodsForCollection($value->model));
             } elseif ($property === "@parent") {
@@ -465,6 +262,18 @@ return $data;',
             } else {
                 var_dump($value, $property);
                 exit;
+            }
+        }
+
+        if ($isCollection === true) {
+            if ($this->rootClassNameForCollection) {
+                $class->setExtendedClass($this->rootClassNameForCollection);
+                $class->addUse($this->rootClassForCollectionNamespace);
+            }
+        } else {
+            if ($this->rootClassName) {
+                $class->setExtendedClass($this->rootClassName);
+                $class->addUse($this->rootClassNamespace);
             }
         }
 
